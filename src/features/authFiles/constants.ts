@@ -148,7 +148,7 @@ export const getAuthFileStatusMessage = (file: AuthFileItem): string => {
 };
 
 // Keep these values lowercase; comparisons normalize incoming text with toLowerCase().
-export const HEALTHY_AUTH_FILE_STATUS_MESSAGES = new Set([
+export const HEALTHY_AUTH_FILE_STATUS_KEYWORDS = new Set([
   'ok',
   'healthy',
   'ready',
@@ -161,7 +161,7 @@ export const hasAuthFileStatusMessage = (file: AuthFileItem): boolean =>
 
 export const hasAuthFileStatusIssue = (file: AuthFileItem): boolean => {
   const message = getAuthFileStatusMessage(file);
-  return Boolean(message) && !HEALTHY_AUTH_FILE_STATUS_MESSAGES.has(message.toLowerCase());
+  return Boolean(message) && !HEALTHY_AUTH_FILE_STATUS_KEYWORDS.has(message.toLowerCase());
 };
 
 export const getTypeLabel = (t: TFunction, type: string): string => {
