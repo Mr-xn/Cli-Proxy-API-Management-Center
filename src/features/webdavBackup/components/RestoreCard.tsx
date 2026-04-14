@@ -38,8 +38,27 @@ export function RestoreCard() {
 
   // 初始加载 + 备份成功后自动刷新列表
   useEffect(() => {
-    refresh();
-  }, [refresh, lastBackupTime]);
+    let cancelled = false;
+
+    if (!serverUrl) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const loadFiles = async () => {
+      const result = await loadHistory();
+      if (!cancelled) {
+        setFiles(result);
+      }
+    };
+
+    void loadFiles();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [serverUrl, lastBackupTime, loadHistory]);
 
   const handleRestore = useCallback(
     async (scope: BackupScope) => {

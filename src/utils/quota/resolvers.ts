@@ -9,6 +9,26 @@ import {
   parseIdTokenPayload
 } from './parsers';
 
+export const AUTH_ACCOUNT_TYPE_FILTERS = ['all', 'free', 'plus', 'team'] as const;
+
+export type AuthAccountTypeFilter = (typeof AUTH_ACCOUNT_TYPE_FILTERS)[number];
+export type AuthAccountType = Exclude<AuthAccountTypeFilter, 'all'>;
+
+const AUTH_ACCOUNT_TYPE_SET = new Set<AuthAccountType>(['free', 'plus', 'team']);
+
+export function normalizeAuthAccountType(value: unknown): AuthAccountType | null {
+  const normalized = normalizePlanType(value);
+  if (!normalized || !AUTH_ACCOUNT_TYPE_SET.has(normalized as AuthAccountType)) return null;
+  return normalized as AuthAccountType;
+}
+
+export function isAuthAccountTypeFilter(value: unknown): value is AuthAccountTypeFilter {
+  return (
+    typeof value === 'string' &&
+    AUTH_ACCOUNT_TYPE_FILTERS.includes(value as AuthAccountTypeFilter)
+  );
+}
+
 export function extractCodexChatgptAccountId(value: unknown): string | null {
   const payload = parseIdTokenPayload(value);
   if (!payload) return null;
@@ -76,6 +96,22 @@ export function resolveCodexPlanType(file: AuthFileItem): string | null {
   }
 
   return null;
+}
+
+export function resolveAuthFileAccountType(
+  file: AuthFileItem,
+  quotaPlanType?: unknown
+): AuthAccountType | null {
+  return normalizeAuthAccountType(quotaPlanType) ?? normalizeAuthAccountType(resolveCodexPlanType(file));
+}
+
+export function matchesAuthAccountTypeFilter(
+  file: AuthFileItem,
+  filter: AuthAccountTypeFilter,
+  quotaPlanType?: unknown
+): boolean {
+  if (filter === 'all') return true;
+  return resolveAuthFileAccountType(file, quotaPlanType) === filter;
 }
 
 export function extractGeminiCliProjectId(value: unknown): string | null {

@@ -147,8 +147,22 @@ export const getAuthFileStatusMessage = (file: AuthFileItem): string => {
   return String(raw).trim();
 };
 
+// Keep these values lowercase; comparisons normalize incoming text with toLowerCase().
+export const HEALTHY_AUTH_FILE_STATUS_KEYWORDS = new Set([
+  'ok',
+  'healthy',
+  'ready',
+  'success',
+  'available',
+]);
+
 export const hasAuthFileStatusMessage = (file: AuthFileItem): boolean =>
   getAuthFileStatusMessage(file).length > 0;
+
+export const hasAuthFileStatusIssue = (file: AuthFileItem): boolean => {
+  const message = getAuthFileStatusMessage(file);
+  return Boolean(message) && !HEALTHY_AUTH_FILE_STATUS_KEYWORDS.has(message.toLowerCase());
+};
 
 export const getTypeLabel = (t: TFunction, type: string): string => {
   const key = `auth_files.filter_${type}`;
