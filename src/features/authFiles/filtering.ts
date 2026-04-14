@@ -12,6 +12,7 @@ import {
   getAuthFileStatusMessage,
   hasAuthFileStatusIssue,
   normalizeProviderKey,
+  TRUTHY_TEXT_VALUES,
 } from '@/features/authFiles/constants';
 
 export const AUTH_FILES_ENABLED_FILTERS = ['all', 'enabled', 'disabled'] as const;
@@ -43,7 +44,14 @@ export type AuthFileFilterContext = {
   searchableText: string[];
 };
 
-const WEEKLY_TEXT_PATTERN = /(weekly|seven[-\s]?day|7[-\s]?day|周限额|七天)/i;
+const WEEKLY_TEXT_KEYWORDS_EN = ['weekly', 'seven-day', 'seven day', '7-day', '7 day'] as const;
+const WEEKLY_TEXT_KEYWORDS_ZH = ['周限额', '七天'] as const;
+const WEEKLY_TEXT_PATTERN = new RegExp(
+  [...WEEKLY_TEXT_KEYWORDS_EN, ...WEEKLY_TEXT_KEYWORDS_ZH]
+    .map((value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\ /g, '[-\\s]?'))
+    .join('|'),
+  'i'
+);
 
 const normalizeText = (value: unknown): string =>
   String(value ?? '')
@@ -84,7 +92,7 @@ const isDisabledAuthFile = (file: AuthFileItem): boolean => {
   const raw: unknown = file.disabled;
   if (typeof raw === 'boolean') return raw;
   if (typeof raw === 'number') return raw !== 0;
-  if (typeof raw === 'string') return raw.trim().toLowerCase() === 'true';
+  if (typeof raw === 'string') return TRUTHY_TEXT_VALUES.has(raw.trim().toLowerCase());
   return false;
 };
 
