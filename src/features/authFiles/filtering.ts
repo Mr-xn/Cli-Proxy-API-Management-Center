@@ -81,7 +81,7 @@ const pushSearchText = (
 };
 
 const isDisabledAuthFile = (file: AuthFileItem): boolean => {
-  const raw = file.disabled;
+  const raw = (file as { disabled?: unknown }).disabled;
   if (typeof raw === 'boolean') return raw;
   if (typeof raw === 'number') return raw !== 0;
   if (typeof raw === 'string') return raw.trim().toLowerCase() === 'true';
@@ -89,7 +89,7 @@ const isDisabledAuthFile = (file: AuthFileItem): boolean => {
 };
 
 const isWeeklyQuotaLabel = (...values: Array<string | null | undefined>) =>
-  values.some((value) => Boolean(value) && WEEKLY_TEXT_PATTERN.test(value));
+  values.some((value) => typeof value === 'string' && WEEKLY_TEXT_PATTERN.test(value));
 
 const isCodexOrClaudeWindowExhausted = (
   state: CodexQuotaState | ClaudeQuotaState | undefined
@@ -201,7 +201,14 @@ export const buildAuthFileFilterContext = (
           seen,
           window.id,
           window.label,
-          window.labelKey ? t(window.labelKey, window.labelParams as Record<string, string | number>) : '',
+          window.labelKey
+            ? t(
+                window.labelKey,
+                'labelParams' in window
+                  ? (window.labelParams as Record<string, string | number>)
+                  : undefined
+              )
+            : '',
           window.resetLabel
         );
       });
