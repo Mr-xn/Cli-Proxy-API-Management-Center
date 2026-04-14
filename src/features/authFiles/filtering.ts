@@ -54,8 +54,8 @@ const stripHtmlForSearch = (value: string): string =>
   normalizeText(
     value
       .replace(/\bclass\s*=\s*(['"]).*?\1/gi, ' ')
-      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<style\b[\s\S]*?<\/style\s*>/gi, ' ')
+      .replace(/<script\b[\s\S]*?<\/script\s*>/gi, ' ')
       .replace(/<\/?[^>]+>/g, ' ')
       .replace(/&nbsp;/gi, ' ')
       .replace(/&quot;/gi, '"')
@@ -81,7 +81,7 @@ const pushSearchText = (
 };
 
 const isDisabledAuthFile = (file: AuthFileItem): boolean => {
-  const raw = (file as { disabled?: unknown }).disabled;
+  const raw: unknown = file.disabled;
   if (typeof raw === 'boolean') return raw;
   if (typeof raw === 'number') return raw !== 0;
   if (typeof raw === 'string') return raw.trim().toLowerCase() === 'true';
@@ -264,7 +264,8 @@ export const buildAuthFileFilterContext = (
       searchableText,
       seen,
       t('auth_files.issue_filter_weekly_limit_zero'),
-      t('common.weekly_limit'),
+      'weekly limit',
+      '周限额',
       'weekly limit zero'
     );
   }
