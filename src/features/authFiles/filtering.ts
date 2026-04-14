@@ -7,7 +7,12 @@ import type {
   GeminiCliQuotaState,
   KimiQuotaState,
 } from '@/types';
-import { resolveAuthProvider } from '@/utils/quota';
+import {
+  resolveAuthFileAccountType,
+  resolveAuthProvider,
+  type AuthAccountType,
+  type AuthAccountTypeFilter,
+} from '@/utils/quota';
 import {
   getAuthFileStatusMessage,
   hasAuthFileStatusIssue,
@@ -36,6 +41,7 @@ export type AuthFilesQuotaSnapshot = {
 };
 
 export type AuthFileFilterContext = {
+  accountType: AuthAccountType | null;
   disabled: boolean;
   hasProblem: boolean;
   hasQuotaError: boolean;
@@ -164,6 +170,14 @@ export const matchesAuthFileEnabledFilter = (
   return filter === 'disabled' ? context.disabled : !context.disabled;
 };
 
+export const matchesAuthFileAccountTypeFilter = (
+  context: Pick<AuthFileFilterContext, 'accountType'>,
+  filter: AuthAccountTypeFilter
+): boolean => {
+  if (filter === 'all') return true;
+  return context.accountType === filter;
+};
+
 export const buildAuthFileFilterContext = (
   file: AuthFileItem,
   quotaSnapshot: AuthFilesQuotaSnapshot,
@@ -175,6 +189,10 @@ export const buildAuthFileFilterContext = (
   const statusMessagePlain = statusMessage ? stripHtmlForSearch(statusMessage) : '';
   const disabled = isDisabledAuthFile(file);
   const quotaState = getQuotaState(file, quotaSnapshot);
+  const accountType = resolveAuthFileAccountType(
+    file,
+    quotaState && 'planType' in quotaState ? quotaState.planType : undefined
+  );
   const hasStatusIssue = hasAuthFileStatusIssue(file);
   const hasQuotaError = quotaState?.status === 'error';
   const hasWeeklyLimitZero =
@@ -196,6 +214,15 @@ export const buildAuthFileFilterContext = (
     disabled ? t('auth_files.enabled_status_disabled') : t('auth_files.enabled_status_enabled'),
     disabled ? 'disabled' : 'enabled'
   );
+
+  if (accountType) {
+    pushSearchText(
+      searchableText,
+      seen,
+      accountType,
+      t(`auth_files.account_type_${accountType}`)
+    );
+  }
 
   if (quotaState?.status === 'success') {
     if ('groups' in quotaState) {
@@ -279,6 +306,7 @@ export const buildAuthFileFilterContext = (
   }
 
   return {
+    accountType,
     disabled,
     hasProblem: hasStatusIssue || hasQuotaError || hasWeeklyLimitZero,
     hasQuotaError,

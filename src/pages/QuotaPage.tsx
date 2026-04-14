@@ -2,10 +2,11 @@
  * Quota management page - coordinates the four quota sections.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
-import { useAuthStore } from '@/stores';
+import { Select } from '@/components/ui/Select';
+import { useAuthStore, useQuotaStore } from '@/stores';
 import { authFilesApi, configFileApi } from '@/services/api';
 import {
   QuotaSection,
@@ -16,15 +17,22 @@ import {
   KIMI_CONFIG
 } from '@/components/quota';
 import type { AuthFileItem } from '@/types';
+import {
+  isAuthAccountTypeFilter,
+  matchesAuthAccountTypeFilter,
+  type AuthAccountTypeFilter,
+} from '@/utils/quota';
 import styles from './QuotaPage.module.scss';
 
 export function QuotaPage() {
   const { t } = useTranslation();
   const connectionStatus = useAuthStore((state) => state.connectionStatus);
+  const codexQuota = useQuotaStore((state) => state.codexQuota);
 
   const [files, setFiles] = useState<AuthFileItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [accountTypeFilter, setAccountTypeFilter] = useState<AuthAccountTypeFilter>('all');
 
   const disableControls = connectionStatus !== 'connected';
 
@@ -62,6 +70,24 @@ export function QuotaPage() {
     loadConfig();
   }, [loadFiles, loadConfig]);
 
+  const accountTypeOptions = useMemo(
+    () => [
+      { value: 'all', label: t('quota_management.account_type_filter_all') },
+      { value: 'free', label: t('quota_management.account_type_free') },
+      { value: 'plus', label: t('quota_management.account_type_plus') },
+      { value: 'team', label: t('quota_management.account_type_team') }
+    ],
+    [t]
+  );
+
+  const filteredFiles = useMemo(
+    () =>
+      files.filter((file) =>
+        matchesAuthAccountTypeFilter(file, accountTypeFilter, codexQuota[file.name]?.planType)
+      ),
+    [accountTypeFilter, codexQuota, files]
+  );
+
   return (
     <div className={styles.container}>
       <div className={styles.pageHeader}>
@@ -71,33 +97,49 @@ export function QuotaPage() {
 
       {error && <div className={styles.errorBox}>{error}</div>}
 
+      <div className={styles.filtersBar}>
+        <div className={styles.filterControl}>
+          <label>{t('quota_management.account_type_filter_label')}</label>
+          <Select
+            value={accountTypeFilter}
+            options={accountTypeOptions}
+            onChange={(value) => {
+              if (!isAuthAccountTypeFilter(value)) return;
+              setAccountTypeFilter(value);
+            }}
+            ariaLabel={t('quota_management.account_type_filter_label')}
+            fullWidth
+          />
+        </div>
+      </div>
+
       <QuotaSection
         config={CLAUDE_CONFIG}
-        files={files}
+        files={filteredFiles}
         loading={loading}
         disabled={disableControls}
       />
       <QuotaSection
         config={ANTIGRAVITY_CONFIG}
-        files={files}
+        files={filteredFiles}
         loading={loading}
         disabled={disableControls}
       />
       <QuotaSection
         config={CODEX_CONFIG}
-        files={files}
+        files={filteredFiles}
         loading={loading}
         disabled={disableControls}
       />
       <QuotaSection
         config={GEMINI_CLI_CONFIG}
-        files={files}
+        files={filteredFiles}
         loading={loading}
         disabled={disableControls}
       />
       <QuotaSection
         config={KIMI_CONFIG}
-        files={files}
+        files={filteredFiles}
         loading={loading}
         disabled={disableControls}
       />

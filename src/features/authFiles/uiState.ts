@@ -9,6 +9,7 @@ export type AuthFilesUiState = {
   search?: string;
   enabledFilter?: string;
   issueFilter?: string;
+  accountTypeFilter?: string;
   page?: number;
   pageSize?: number;
   regularPageSize?: number;

@@ -40,6 +40,7 @@ import {
 } from '@/features/authFiles/constants';
 import {
   buildAuthFileFilterContext,
+  matchesAuthFileAccountTypeFilter,
   isAuthFilesEnabledFilter,
   isAuthFilesIssueFilter,
   matchesAuthFileEnabledFilter,
@@ -67,6 +68,7 @@ import {
   type AuthFilesSortMode,
 } from '@/features/authFiles/uiState';
 import { useAuthStore, useNotificationStore, useQuotaStore, useThemeStore } from '@/stores';
+import { isAuthAccountTypeFilter, type AuthAccountTypeFilter } from '@/utils/quota';
 import styles from './AuthFilesPage.module.scss';
 
 const easePower3Out = (progress: number) => 1 - (1 - progress) ** 4;
@@ -99,6 +101,7 @@ export function AuthFilesPage() {
   const [search, setSearch] = useState('');
   const [enabledFilter, setEnabledFilter] = useState<AuthFilesEnabledFilter>('all');
   const [issueFilter, setIssueFilter] = useState<AuthFilesIssueFilter>('all');
+  const [accountTypeFilter, setAccountTypeFilter] = useState<AuthAccountTypeFilter>('all');
   const [compactMode, setCompactMode] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSizeByMode, setPageSizeByMode] = useState({
@@ -231,6 +234,9 @@ export function AuthFilesPage() {
       if (isAuthFilesIssueFilter(persisted.issueFilter)) {
         setIssueFilter(persisted.issueFilter);
       }
+      if (isAuthAccountTypeFilter(persisted.accountTypeFilter)) {
+        setAccountTypeFilter(persisted.accountTypeFilter);
+      }
       if (typeof persisted.page === 'number' && Number.isFinite(persisted.page)) {
         setPage(Math.max(1, Math.round(persisted.page)));
       }
@@ -268,6 +274,7 @@ export function AuthFilesPage() {
       search,
       enabledFilter,
       issueFilter,
+      accountTypeFilter,
       page,
       pageSize,
       regularPageSize: pageSizeByMode.regular,
@@ -277,6 +284,7 @@ export function AuthFilesPage() {
     writePersistedAuthFilesCompactMode(compactMode);
   }, [
     compactMode,
+    accountTypeFilter,
     enabledFilter,
     filter,
     issueFilter,
@@ -407,9 +415,10 @@ export function AuthFilesPage() {
         if (!context) return false;
         if (problemOnly && !context.hasProblem) return false;
         if (!matchesAuthFileEnabledFilter(context, enabledFilter)) return false;
+        if (!matchesAuthFileAccountTypeFilter(context, accountTypeFilter)) return false;
         return matchesAuthFileIssueFilter(context, issueFilter);
       }),
-    [enabledFilter, files, filterContexts, issueFilter, problemOnly]
+    [accountTypeFilter, enabledFilter, files, filterContexts, issueFilter, problemOnly]
   );
 
   const sortOptions = useMemo(
@@ -437,6 +446,16 @@ export function AuthFilesPage() {
       { value: 'status', label: t('auth_files.issue_filter_status') },
       { value: 'quota-error', label: t('auth_files.issue_filter_quota_error') },
       { value: 'weekly-limit-zero', label: t('auth_files.issue_filter_weekly_limit_zero') },
+    ],
+    [t]
+  );
+
+  const accountTypeFilterOptions = useMemo(
+    () => [
+      { value: 'all', label: t('auth_files.account_type_filter_all') },
+      { value: 'free', label: t('auth_files.account_type_free') },
+      { value: 'plus', label: t('auth_files.account_type_plus') },
+      { value: 'team', label: t('auth_files.account_type_team') },
     ],
     [t]
   );
@@ -827,6 +846,20 @@ export function AuthFilesPage() {
                       setPage(1);
                     }}
                     ariaLabel={t('auth_files.issue_filter_label')}
+                    fullWidth
+                  />
+                </div>
+                <div className={styles.filterItem}>
+                  <label>{t('auth_files.account_type_filter_label')}</label>
+                  <Select
+                    value={accountTypeFilter}
+                    options={accountTypeFilterOptions}
+                    onChange={(value) => {
+                      if (!isAuthAccountTypeFilter(value)) return;
+                      setAccountTypeFilter(value);
+                      setPage(1);
+                    }}
+                    ariaLabel={t('auth_files.account_type_filter_label')}
                     fullWidth
                   />
                 </div>
