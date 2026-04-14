@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
@@ -8,24 +8,32 @@ import type { BackupScope } from '../types';
 interface RestoreModalProps {
   open: boolean;
   onClose: () => void;
-  onRestore: (scope: BackupScope) => void;
+  onRestore: (scope: BackupScope) => void | Promise<void>;
   loading: boolean;
   filename: string;
 }
 
+const createDefaultScope = (): BackupScope => ({
+  localStorage: true,
+  config: false,
+  usage: true,
+});
+
 export function RestoreModal({ open, onClose, onRestore, loading, filename }: RestoreModalProps) {
   const { t } = useTranslation();
 
-  const [scope, setScope] = useState<BackupScope>({
-    localStorage: true,
-    config: false,
-    usage: true,
-  });
+  const [scope, setScope] = useState<BackupScope>(() => createDefaultScope());
 
-  // 每次打开弹窗时重置为默认值
-  useEffect(() => {
-    if (open) setScope({ localStorage: true, config: false, usage: true });
-  }, [open]);
+  const handleClose = () => {
+    setScope(createDefaultScope());
+    onClose();
+  };
+
+  const handleRestore = () => {
+    void Promise.resolve(onRestore(scope)).finally(() => {
+      setScope(createDefaultScope());
+    });
+  };
 
   const scopeItems: { key: keyof BackupScope; label: string; hint: string }[] = [
     { key: 'localStorage', label: t('backup.scope_preferences'), hint: t('backup.scope_preferences_hint') },
@@ -39,16 +47,16 @@ export function RestoreModal({ open, onClose, onRestore, loading, filename }: Re
     <Modal
       open={open}
       title={t('backup.restore_title')}
-      onClose={onClose}
+      onClose={handleClose}
       closeDisabled={loading}
       footer={
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-          <Button variant="secondary" onClick={onClose} disabled={loading}>
+          <Button variant="secondary" onClick={handleClose} disabled={loading}>
             {t('common.cancel')}
           </Button>
           <Button
             variant="primary"
-            onClick={() => onRestore(scope)}
+            onClick={handleRestore}
             loading={loading}
             disabled={!hasSelection}
           >
