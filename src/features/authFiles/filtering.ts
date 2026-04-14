@@ -54,7 +54,7 @@ const WEEKLY_TEXT_KEYWORDS_EN = ['weekly', 'seven-day', 'seven day', '7-day', '7
 const WEEKLY_TEXT_KEYWORDS_ZH = ['周限额', '七天'] as const;
 const WEEKLY_TEXT_PATTERN = new RegExp(
   [...WEEKLY_TEXT_KEYWORDS_EN, ...WEEKLY_TEXT_KEYWORDS_ZH]
-    .map((value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\ /g, '[-\\s]?'))
+    .map((value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '[-\\s]?'))
     .join('|'),
   'i'
 );
