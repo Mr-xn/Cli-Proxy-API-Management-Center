@@ -32,13 +32,21 @@ import {
   getAuthFileIcon,
   getTypeColor,
   getTypeLabel,
-  hasAuthFileStatusMessage,
   isRuntimeOnlyAuthFile,
   normalizeProviderKey,
   parsePriorityValue,
   type QuotaProviderType,
   type ResolvedTheme,
 } from '@/features/authFiles/constants';
+import {
+  buildAuthFileFilterContext,
+  isAuthFilesEnabledFilter,
+  isAuthFilesIssueFilter,
+  matchesAuthFileEnabledFilter,
+  matchesAuthFileIssueFilter,
+  type AuthFilesEnabledFilter,
+  type AuthFilesIssueFilter,
+} from '@/features/authFiles/filtering';
 import { AuthFileCard } from '@/features/authFiles/components/AuthFileCard';
 import { AuthFileModelsModal } from '@/features/authFiles/components/AuthFileModelsModal';
 import { AuthFilesPrefixProxyEditorModal } from '@/features/authFiles/components/AuthFilesPrefixProxyEditorModal';
@@ -58,7 +66,7 @@ import {
   writePersistedAuthFilesCompactMode,
   type AuthFilesSortMode,
 } from '@/features/authFiles/uiState';
-import { useAuthStore, useNotificationStore, useThemeStore } from '@/stores';
+import { useAuthStore, useNotificationStore, useQuotaStore, useThemeStore } from '@/stores';
 import styles from './AuthFilesPage.module.scss';
 
 const easePower3Out = (progress: number) => 1 - (1 - progress) ** 4;
@@ -88,8 +96,10 @@ export function AuthFilesPage() {
 
   const [filter, setFilter] = useState<'all' | string>('all');
   const [problemOnly, setProblemOnly] = useState(false);
-  const [compactMode, setCompactMode] = useState(false);
   const [search, setSearch] = useState('');
+  const [enabledFilter, setEnabledFilter] = useState<AuthFilesEnabledFilter>('all');
+  const [issueFilter, setIssueFilter] = useState<AuthFilesIssueFilter>('all');
+  const [compactMode, setCompactMode] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSizeByMode, setPageSizeByMode] = useState({
     regular: DEFAULT_REGULAR_PAGE_SIZE,
@@ -135,6 +145,11 @@ export function AuthFilesPage() {
   } = useAuthFilesData({ refreshKeyStats });
 
   const statusBarCache = useAuthFilesStatusBarCache(files, usageDetails);
+  const antigravityQuota = useQuotaStore((state) => state.antigravityQuota);
+  const claudeQuota = useQuotaStore((state) => state.claudeQuota);
+  const codexQuota = useQuotaStore((state) => state.codexQuota);
+  const geminiCliQuota = useQuotaStore((state) => state.geminiCliQuota);
+  const kimiQuota = useQuotaStore((state) => state.kimiQuota);
 
   const {
     excluded,
@@ -210,6 +225,12 @@ export function AuthFilesPage() {
       if (typeof persisted.search === 'string') {
         setSearch(persisted.search);
       }
+      if (isAuthFilesEnabledFilter(persisted.enabledFilter)) {
+        setEnabledFilter(persisted.enabledFilter);
+      }
+      if (isAuthFilesIssueFilter(persisted.issueFilter)) {
+        setIssueFilter(persisted.issueFilter);
+      }
       if (typeof persisted.page === 'number' && Number.isFinite(persisted.page)) {
         setPage(Math.max(1, Math.round(persisted.page)));
       }
@@ -245,6 +266,8 @@ export function AuthFilesPage() {
       problemOnly,
       compactMode,
       search,
+      enabledFilter,
+      issueFilter,
       page,
       pageSize,
       regularPageSize: pageSizeByMode.regular,
@@ -254,7 +277,9 @@ export function AuthFilesPage() {
     writePersistedAuthFilesCompactMode(compactMode);
   }, [
     compactMode,
+    enabledFilter,
     filter,
+    issueFilter,
     page,
     pageSize,
     pageSizeByMode,
@@ -354,9 +379,37 @@ export function AuthFilesPage() {
     return Array.from(types);
   }, [files]);
 
-  const filesMatchingProblemFilter = useMemo(
-    () => (problemOnly ? files.filter(hasAuthFileStatusMessage) : files),
-    [files, problemOnly]
+  const filterContexts = useMemo(
+    () =>
+      new Map(
+        files.map((file) => [
+          file.name,
+          buildAuthFileFilterContext(
+            file,
+            {
+              antigravityQuota,
+              claudeQuota,
+              codexQuota,
+              geminiCliQuota,
+              kimiQuota,
+            },
+            t
+          ),
+        ])
+      ),
+    [antigravityQuota, claudeQuota, codexQuota, files, geminiCliQuota, kimiQuota, t]
+  );
+
+  const filesMatchingStructuredFilters = useMemo(
+    () =>
+      files.filter((file) => {
+        const context = filterContexts.get(file.name);
+        if (!context) return false;
+        if (problemOnly && !context.hasProblem) return false;
+        if (!matchesAuthFileEnabledFilter(context, enabledFilter)) return false;
+        return matchesAuthFileIssueFilter(context, issueFilter);
+      }),
+    [enabledFilter, files, filterContexts, issueFilter, problemOnly]
   );
 
   const sortOptions = useMemo(
@@ -368,14 +421,34 @@ export function AuthFilesPage() {
     [t]
   );
 
+  const enabledFilterOptions = useMemo(
+    () => [
+      { value: 'all', label: t('auth_files.enabled_filter_all') },
+      { value: 'enabled', label: t('auth_files.enabled_filter_enabled') },
+      { value: 'disabled', label: t('auth_files.enabled_filter_disabled') },
+    ],
+    [t]
+  );
+
+  const issueFilterOptions = useMemo(
+    () => [
+      { value: 'all', label: t('auth_files.issue_filter_all') },
+      { value: 'problem', label: t('auth_files.issue_filter_problem') },
+      { value: 'status', label: t('auth_files.issue_filter_status') },
+      { value: 'quota-error', label: t('auth_files.issue_filter_quota_error') },
+      { value: 'weekly-limit-zero', label: t('auth_files.issue_filter_weekly_limit_zero') },
+    ],
+    [t]
+  );
+
   const typeCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: filesMatchingProblemFilter.length };
-    filesMatchingProblemFilter.forEach((file) => {
+    const counts: Record<string, number> = { all: filesMatchingStructuredFilters.length };
+    filesMatchingStructuredFilters.forEach((file) => {
       if (!file.type) return;
       counts[file.type] = (counts[file.type] || 0) + 1;
     });
     return counts;
-  }, [filesMatchingProblemFilter]);
+  }, [filesMatchingStructuredFilters]);
 
   const normalizedSearch = search.trim();
   const wildcardSearch = useMemo(() => buildWildcardSearch(normalizedSearch), [normalizedSearch]);
@@ -383,11 +456,12 @@ export function AuthFilesPage() {
   const filtered = useMemo(() => {
     const normalizedTerm = normalizedSearch.toLowerCase();
 
-    return filesMatchingProblemFilter.filter((item) => {
+    return filesMatchingStructuredFilters.filter((item) => {
+      const context = filterContexts.get(item.name);
       const matchType = filter === 'all' || item.type === filter;
       const matchSearch =
         !normalizedSearch ||
-        [item.name, item.type, item.provider].some((value) => {
+        (context?.searchableText ?? []).some((value) => {
           const content = (value || '').toString();
           return wildcardSearch
             ? wildcardSearch.test(content)
@@ -395,7 +469,7 @@ export function AuthFilesPage() {
         });
       return matchType && matchSearch;
     });
-  }, [filesMatchingProblemFilter, filter, normalizedSearch, wildcardSearch]);
+  }, [filesMatchingStructuredFilters, filter, filterContexts, normalizedSearch, wildcardSearch]);
 
   const sorted = useMemo(() => {
     const copy = [...filtered];
@@ -726,6 +800,34 @@ export function AuthFilesPage() {
                         e.currentTarget.blur();
                       }
                     }}
+                  />
+                </div>
+                <div className={styles.filterItem}>
+                  <label>{t('auth_files.enabled_filter_label')}</label>
+                  <Select
+                    value={enabledFilter}
+                    options={enabledFilterOptions}
+                    onChange={(value) => {
+                      if (!isAuthFilesEnabledFilter(value)) return;
+                      setEnabledFilter(value);
+                      setPage(1);
+                    }}
+                    ariaLabel={t('auth_files.enabled_filter_label')}
+                    fullWidth
+                  />
+                </div>
+                <div className={styles.filterItem}>
+                  <label>{t('auth_files.issue_filter_label')}</label>
+                  <Select
+                    value={issueFilter}
+                    options={issueFilterOptions}
+                    onChange={(value) => {
+                      if (!isAuthFilesIssueFilter(value)) return;
+                      setIssueFilter(value);
+                      setPage(1);
+                    }}
+                    ariaLabel={t('auth_files.issue_filter_label')}
+                    fullWidth
                   />
                 </div>
                 <div className={styles.filterItem}>
