@@ -204,7 +204,11 @@ export function QuotaSection<TState extends QuotaStatusState, TData>({
       const prevKeys = Object.keys(prev);
       const nextKeys = Object.keys(nextState);
       const isUnchanged =
-        prevKeys.length === nextKeys.length && prevKeys.every((key) => prev[key] === nextState[key]);
+        prevKeys.length === nextKeys.length &&
+        prevKeys.every(
+          (key) =>
+            Object.prototype.hasOwnProperty.call(nextState, key) && prev[key] === nextState[key]
+        );
 
       if (isUnchanged) {
         return prev;
