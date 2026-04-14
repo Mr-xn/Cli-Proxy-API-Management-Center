@@ -764,6 +764,7 @@ export function AuthFilesPage() {
                 handleDeleteAll({
                   filter,
                   problemOnly,
+                  filteredFiles: filtered,
                   onResetFilterToAll: () => setFilter('all'),
                   onResetProblemOnly: () => setProblemOnly(false),
                 })

@@ -9,13 +9,13 @@ import { MAX_AUTH_FILE_SIZE } from '@/utils/constants';
 import { downloadBlob } from '@/utils/download';
 import {
   getTypeLabel,
-  hasAuthFileStatusMessage,
   isRuntimeOnlyAuthFile,
 } from '@/features/authFiles/constants';
 
 type DeleteAllOptions = {
   filter: string;
   problemOnly: boolean;
+  filteredFiles?: AuthFileItem[];
   onResetFilterToAll: () => void;
   onResetProblemOnly: () => void;
 };
@@ -275,7 +275,13 @@ export function useAuthFilesData(options: UseAuthFilesDataOptions): UseAuthFiles
 
   const handleDeleteAll = useCallback(
     (deleteAllOptions: DeleteAllOptions) => {
-      const { filter, problemOnly, onResetFilterToAll, onResetProblemOnly } = deleteAllOptions;
+      const {
+        filter,
+        problemOnly,
+        filteredFiles,
+        onResetFilterToAll,
+        onResetProblemOnly,
+      } = deleteAllOptions;
       const isFiltered = filter !== 'all';
       const isProblemOnly = problemOnly === true;
       const typeLabel = isFiltered ? getTypeLabel(t, filter) : t('auth_files.filter_all');
@@ -301,12 +307,9 @@ export function useAuthFilesData(options: UseAuthFilesDataOptions): UseAuthFiles
               setFiles((prev) => prev.filter((file) => isRuntimeOnlyAuthFile(file)));
               deselectAll();
             } else {
-              const filesToDelete = files.filter((file) => {
-                if (isRuntimeOnlyAuthFile(file)) return false;
-                if (isFiltered && file.type !== filter) return false;
-                if (isProblemOnly && !hasAuthFileStatusMessage(file)) return false;
-                return true;
-              });
+              const filesToDelete = (filteredFiles ?? files).filter(
+                (file) => !isRuntimeOnlyAuthFile(file)
+              );
 
               if (filesToDelete.length === 0) {
                 const emptyMessage = isProblemOnly
