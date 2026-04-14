@@ -203,17 +203,14 @@ export function QuotaSection<TState extends QuotaStatusState, TData>({
 
       const prevKeys = Object.keys(prev);
       const nextKeys = Object.keys(nextState);
-      if (prevKeys.length !== nextKeys.length) {
-        return nextState;
+      const isUnchanged =
+        prevKeys.length === nextKeys.length && prevKeys.every((key) => prev[key] === nextState[key]);
+
+      if (isUnchanged) {
+        return prev;
       }
 
-      for (const key of nextKeys) {
-        if (prev[key] !== nextState[key]) {
-          return nextState;
-        }
-      }
-
-      return prev;
+      return nextState;
     });
   }, [filteredFiles, loading, setQuota]);
 
