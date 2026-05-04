@@ -45,10 +45,10 @@ This repository can follow the official WebUI upstream at `https://github.com/ro
 
 ### Files to keep under review during upstream sync
 
-- `/home/runner/work/Cli-Proxy-API-Management-Center/Cli-Proxy-API-Management-Center/src/pages/AuthFilesPage.tsx`
-- `/home/runner/work/Cli-Proxy-API-Management-Center/Cli-Proxy-API-Management-Center/src/features/authFiles/filtering.ts`
-- `/home/runner/work/Cli-Proxy-API-Management-Center/Cli-Proxy-API-Management-Center/src/features/authFiles/uiState.ts`
-- `/home/runner/work/Cli-Proxy-API-Management-Center/Cli-Proxy-API-Management-Center/src/services/api/authFiles.ts`
+- `src/pages/AuthFilesPage.tsx`
+- `src/features/authFiles/filtering.ts`
+- `src/features/authFiles/uiState.ts`
+- `src/services/api/authFiles.ts`
 
 ### Behaviors that must be preserved
 

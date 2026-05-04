@@ -45,10 +45,10 @@ remote-management:
 
 ### 需要重点保留的文件
 
-- `/home/runner/work/Cli-Proxy-API-Management-Center/Cli-Proxy-API-Management-Center/src/pages/AuthFilesPage.tsx`
-- `/home/runner/work/Cli-Proxy-API-Management-Center/Cli-Proxy-API-Management-Center/src/features/authFiles/filtering.ts`
-- `/home/runner/work/Cli-Proxy-API-Management-Center/Cli-Proxy-API-Management-Center/src/features/authFiles/uiState.ts`
-- `/home/runner/work/Cli-Proxy-API-Management-Center/Cli-Proxy-API-Management-Center/src/services/api/authFiles.ts`
+- `src/pages/AuthFilesPage.tsx`
+- `src/features/authFiles/filtering.ts`
+- `src/features/authFiles/uiState.ts`
+- `src/services/api/authFiles.ts`
 
 ### 同步时要保留的行为
 
