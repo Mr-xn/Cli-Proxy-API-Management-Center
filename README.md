@@ -326,7 +326,7 @@ A: 主要区别有两个：
 
 - **官方主程序**: https://github.com/router-for-me/CLIProxyAPI
 - **官方 WebUI**: https://github.com/router-for-me/Cli-Proxy-API-Management-Center
-- **本仓库**: https://github.com/Mr-xn/Cli-Proxy-API-Management-Center
+- **当前 Fork**: https://github.com/Mr-xn/Cli-Proxy-API-Management-Center
 
 ## 许可证
 

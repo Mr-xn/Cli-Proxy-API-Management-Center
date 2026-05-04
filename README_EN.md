@@ -326,7 +326,7 @@ All other features remain consistent with the official version
 
 - **Official Main Program**: https://github.com/router-for-me/CLIProxyAPI
 - **Official WebUI**: https://github.com/router-for-me/Cli-Proxy-API-Management-Center
-- **This Repository**: https://github.com/Mr-xn/Cli-Proxy-API-Management-Center
+- **Current Fork**: https://github.com/Mr-xn/Cli-Proxy-API-Management-Center
 
 ## License
 
