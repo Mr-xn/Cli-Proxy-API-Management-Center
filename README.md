@@ -30,12 +30,40 @@
 
 ```yaml
 remote-management:
-  panel-github-repository: "https://github.com/kongkongyo/Cli-Proxy-API-Management-Center"
+  panel-github-repository: "https://github.com/router-for-me/Cli-Proxy-API-Management-Center"
 ```
 
 配置完成后，重启 CLI Proxy API 服务，访问 `http://<host>:<api_port>/management.html` 即可查看管理界面
 
 详细配置说明请参考官方文档：https://help.router-for.me/cn/management/webui.html
+
+---
+
+## 同步官方 WebUI 上游时保留的本地补丁
+
+本仓库后续可直接跟随官方 WebUI 仓库 `https://github.com/router-for-me/Cli-Proxy-API-Management-Center` 同步更新，但请继续保留 `auth-files` 的本地筛选增强。
+
+### 需要重点保留的文件
+
+- `/home/runner/work/Cli-Proxy-API-Management-Center/Cli-Proxy-API-Management-Center/src/pages/AuthFilesPage.tsx`
+- `/home/runner/work/Cli-Proxy-API-Management-Center/Cli-Proxy-API-Management-Center/src/features/authFiles/filtering.ts`
+- `/home/runner/work/Cli-Proxy-API-Management-Center/Cli-Proxy-API-Management-Center/src/features/authFiles/uiState.ts`
+- `/home/runner/work/Cli-Proxy-API-Management-Center/Cli-Proxy-API-Management-Center/src/services/api/authFiles.ts`
+
+### 同步时要保留的行为
+
+- 名称/关键词搜索
+- 按 provider/type 筛选
+- 启用/禁用筛选
+- 问题状态筛选
+- 账号类型筛选
+- 刷新后恢复筛选条件
+- 基于 `searchableText` 的模糊搜索
+
+### 合并建议
+
+- 如果官方改了 `AuthFilesPage.tsx`，优先合并页面结构和接口调用，再把本地筛选状态、筛选函数和搜索逻辑并回去
+- 如果 `/auth-files` 返回字段变化，优先修改 `src/services/api/authFiles.ts` 的归一化逻辑，不要直接删掉现有筛选能力
 
 ---
 
@@ -261,7 +289,7 @@ https://example.com:8317
 A: 在 CLI Proxy API 的配置文件中添加以下配置即可
 ```yaml
 remote-management:
-  panel-github-repository: "https://github.com/kongkongyo/CLIProxyAPI-Web-Dashboard"
+  panel-github-repository: "https://github.com/router-for-me/Cli-Proxy-API-Management-Center"
 ```
 
 **Q: 无法连接到服务器？**
@@ -298,7 +326,7 @@ A: 主要区别有两个：
 
 - **官方主程序**: https://github.com/router-for-me/CLIProxyAPI
 - **官方 WebUI**: https://github.com/router-for-me/Cli-Proxy-API-Management-Center
-- **本仓库**: https://github.com/kongkongyo/CLIProxyAPI-Web-Dashboard
+- **本仓库**: https://github.com/Mr-xn/Cli-Proxy-API-Management-Center
 
 ## 许可证
 

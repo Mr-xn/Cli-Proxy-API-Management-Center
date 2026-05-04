@@ -30,12 +30,40 @@ Modify following configuration in your `config.yaml`:
 
 ```yaml
 remote-management:
-  panel-github-repository: "https://github.com/kongkongyo/CLIProxyAPI-Web-Dashboard"
+  panel-github-repository: "https://github.com/router-for-me/Cli-Proxy-API-Management-Center"
 ```
 
 After configuration, restart the CLI Proxy API service and visit `http://<host>:<api_port>/management.html` to view the management interface
 
 For detailed configuration instructions, please refer to the official documentation: https://help.router-for.me/cn/management/webui.html
+
+---
+
+## Local patch to preserve when syncing the official WebUI
+
+This repository can follow the official WebUI upstream at `https://github.com/router-for-me/Cli-Proxy-API-Management-Center`, but the local `auth-files` filtering enhancements should remain as a maintained patch.
+
+### Files to keep under review during upstream sync
+
+- `/home/runner/work/Cli-Proxy-API-Management-Center/Cli-Proxy-API-Management-Center/src/pages/AuthFilesPage.tsx`
+- `/home/runner/work/Cli-Proxy-API-Management-Center/Cli-Proxy-API-Management-Center/src/features/authFiles/filtering.ts`
+- `/home/runner/work/Cli-Proxy-API-Management-Center/Cli-Proxy-API-Management-Center/src/features/authFiles/uiState.ts`
+- `/home/runner/work/Cli-Proxy-API-Management-Center/Cli-Proxy-API-Management-Center/src/services/api/authFiles.ts`
+
+### Behaviors that must be preserved
+
+- Name/keyword search
+- Provider/type filtering
+- Enabled/disabled filtering
+- Problem-state filtering
+- Account-type filtering
+- Persisted filters after refresh
+- Fuzzy search built from `searchableText`
+
+### Merge guidance
+
+- If the official upstream rewrites `AuthFilesPage.tsx`, merge the new layout and API calls first, then re-apply the local filter state, filtering helpers, and search logic
+- If `/auth-files` response fields change, adapt `src/services/api/authFiles.ts` first so the page can keep consuming a normalized shape without dropping the local filters
 
 ---
 
@@ -261,7 +289,7 @@ When accessing from a non-local browser, you need to enable remote management on
 A: Add the following configuration to your CLI Proxy API configuration file
 ```yaml
 remote-management:
-  panel-github-repository: "https://github.com/kongkongyo/CLIProxyAPI-Web-Dashboard"
+  panel-github-repository: "https://github.com/router-for-me/Cli-Proxy-API-Management-Center"
 ```
 
 **Q: Cannot connect to the server?**
@@ -298,7 +326,7 @@ All other features remain consistent with the official version
 
 - **Official Main Program**: https://github.com/router-for-me/CLIProxyAPI
 - **Official WebUI**: https://github.com/router-for-me/Cli-Proxy-API-Management-Center
-- **This Repository**: https://github.com/kongkongyo/CLIProxyAPI-Web-Dashboard
+- **This Repository**: https://github.com/Mr-xn/Cli-Proxy-API-Management-Center
 
 ## License
 
