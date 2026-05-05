@@ -67,7 +67,6 @@ export type VisualConfigValues = {
   commercialMode: boolean;
   loggingToFile: boolean;
   logsMaxTotalSizeMb: string;
-  usageStatisticsEnabled: boolean;
   proxyUrl: string;
   forceModelPrefix: boolean;
   requestRetry: string;
@@ -77,6 +76,8 @@ export type VisualConfigValues = {
   quotaSwitchPreviewModel: boolean;
   quotaAntigravityCredits: boolean;
   routingStrategy: 'round-robin' | 'fill-first';
+  routingSessionAffinity: boolean;
+  routingSessionAffinityTTL: string;
   wsAuth: boolean;
   payloadDefaultRules: PayloadRule[];
   payloadDefaultRawRules: PayloadRule[];
@@ -107,7 +108,6 @@ export const DEFAULT_VISUAL_VALUES: VisualConfigValues = {
   commercialMode: false,
   loggingToFile: false,
   logsMaxTotalSizeMb: '',
-  usageStatisticsEnabled: false,
   proxyUrl: '',
   forceModelPrefix: false,
   requestRetry: '',
@@ -115,8 +115,10 @@ export const DEFAULT_VISUAL_VALUES: VisualConfigValues = {
   maxRetryInterval: '',
   quotaSwitchProject: true,
   quotaSwitchPreviewModel: true,
-  quotaAntigravityCredits: true,
+  quotaAntigravityCredits: false,
   routingStrategy: 'round-robin',
+  routingSessionAffinity: false,
+  routingSessionAffinityTTL: '',
   wsAuth: false,
   payloadDefaultRules: [],
   payloadDefaultRawRules: [],
