@@ -1,5 +1,5 @@
 /**
- * Quota management page - coordinates the three quota sections.
+ * Quota management page - coordinates the provider quota sections.
  */
 
 import { useCallback, useEffect, useState } from 'react';
